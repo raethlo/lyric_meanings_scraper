@@ -58,17 +58,27 @@ end
 i = 1
 
 10.times do
-  page = open_page(i)
-  data = scrape_lyric(page)
+  begin
+    page = open_page(i)
+    data = scrape_lyric(page)
 
-  ScraperWiki.save_sqlite(
-    ["lyrics"],
-    {
-        "artist" => data[:artist],
-        "album" => data[:album],
-        "lyrics" => data[:lyrics]
-    }
-  )
+    if (ScraperWiki.select("* from lyrics where `artist`='#{data[:artist]}' and `song`='#{data[:song]}'").empty? rescue true)
+      ScraperWiki.save_sqlite(
+        ["lyrics"],
+        {
+            "artist" => data[:artist],
+            "album" => data[:album],
+            "song" => data[:song],
+            "lyrics" => data[:lyrics]
+        }
+      )
+    else
+      puts "Lyrics for #{data[:artist]} and song #{data[:song]} already there"
+    end
 
-  i += 1
+    i += 1
+
+  rescue => e
+    puts e.message
+  end
 end
